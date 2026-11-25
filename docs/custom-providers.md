@@ -26,7 +26,7 @@ import { ResilientLLM } from 'resilient-llm';
 
 const llm = new ResilientLLM({
   aiService: 'openrouter',
-  model: 'openrouter/free' // or any OpenRouter model ID (provider/model e.g. openai/gpt-5-nano)
+  model: 'openrouter/free' // or another model ID from OpenRouter's model list (provider/model)
 });
 ```
 

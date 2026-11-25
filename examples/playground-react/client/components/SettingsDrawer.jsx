@@ -319,7 +319,7 @@ export function LLMSettingsSection({ config, updateConfig, apiKey, onApiKeyChang
                             if (!autocompleteRef.current?.contains(document.activeElement)) setShowAutocomplete(false);
                         }, 200);
                     }}
-                    placeholder="e.g. gpt-5-nano"
+                    placeholder="e.g. gpt-6-luna"
                     autoComplete="off"
                 />
                 {showAutocomplete && filteredModels.length > 0 && (

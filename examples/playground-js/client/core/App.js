@@ -707,7 +707,7 @@ export class App {
     _setFallbackDefaults() {
         this.settings.setConfig({
             service: 'openai',
-            model: 'gpt-5-nano',
+            model: 'gpt-6-luna',
             temperature: '0.7',
             maxTokens: '2048'
         });

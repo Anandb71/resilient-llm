@@ -66,7 +66,7 @@ new ResilientLLM(options?: ResilientLLMOptions)
 ```javascript
 const llm = new ResilientLLM({
   aiService: 'openai',
-  model: 'gpt-5-nano',
+  model: 'gpt-6-luna',
   maxTokens: 2048,
   temperature: 0.7,
   rateLimitConfig: {
@@ -114,7 +114,7 @@ chat(conversationHistory: Message[], llmOptions?: ChatOptions): Promise<ChatResp
 | `topP` | `number` | Override top-p for this request |
 | `maxInputTokens` | `number` | Override max input tokens for this request |
 | `maxCompletionTokens` | `number` | Maximum completion tokens (for reasoning models) |
-| `reasoningEffort` | `string` | Reasoning effort level: `"low"`, `"medium"`, or `"high"` (for reasoning models) |
+| `reasoningEffort` | `string` | Model-dependent reasoning effort, such as `"none"`, `"low"`, `"medium"`, or `"high"`. OpenAI `gpt-6-luna` function calls require `"none"`. |
 | `apiKey` | `string` | Override API key for this request (takes precedence over ProviderRegistry) |
 | `tools` | `Tool[]` | Array of tool definitions for function calling |
 | `responseFormat` | `Object \| string` | Response format specification (`json_object`/`json_schema` object shapes, plain schema-like object, or JSON aliases: `"json"`, `"object"`, `"json_object"`) |
@@ -202,7 +202,7 @@ const response = await llm.chat(conversationHistory, {
 const response = await llm.chat(conversationHistory, {
   apiKey: 'sk-custom-key-here',
   aiService: 'openai',
-  model: 'gpt-5-nano'
+  model: 'gpt-6-luna'
 });
 ```
 
@@ -210,7 +210,7 @@ const response = await llm.chat(conversationHistory, {
 ```javascript
 const llm = new ResilientLLM({
   aiService: 'openai',
-  model: 'gpt-5-nano',
+  model: 'gpt-6-luna',
 });
 
 const { content, metadata } = await llm.chat(conversationHistory);
@@ -612,7 +612,7 @@ interface ChatOptions {
   topP?: number;
   maxInputTokens?: number;
   maxCompletionTokens?: number;
-  reasoningEffort?: 'low' | 'medium' | 'high';
+  reasoningEffort?: string;
   apiKey?: string;
   tools?: Tool[];
   responseFormat?: Object;
@@ -676,7 +676,7 @@ responseFormat: {
 **End-to-end example (schema mode)**
 
 ```typescript
-const llm = new ResilientLLM({ aiService: 'openai', model: 'gpt-5-nano' });
+const llm = new ResilientLLM({ aiService: 'openai', model: 'gpt-6-luna' });
 
 const result = await llm.chat(
   [{ role: 'user', content: 'Return an answer and citations.' }],
@@ -896,17 +896,26 @@ Same format as OpenAI response.
 Each service has a default model configured. Use `ProviderRegistry.getDefaultModels()` to get all default models:
 
 - **Anthropic:** `claude-3-5-sonnet-20240620`
-- **OpenAI:** `gpt-5-nano`
+- **OpenAI:** `gpt-6-luna`
 - **Google:** `gemini-2.0-flash`
 - **Ollama:** `llama3.1:8b`
 
 ### Reasoning Models
 
-Models starting with `"o"` (e.g., `"o1"`, `"o3"`) or `"gpt-5"` are treated as reasoning models and use different parameters:
+Models starting with `"o"`, `"gpt-5"`, or `"gpt-6"` are treated as reasoning models and use different parameters:
 
 - `max_completion_tokens` instead of `max_tokens`
-- `reasoning_effort` parameter (`"low"`, `"medium"`, `"high"`, defaults to `"medium"`)
+- `reasoning_effort` parameter when `reasoningEffort` is configured. Supported values and defaults depend on the model.
 - No `temperature` or `top_p` parameters
+
+OpenAI's fallback model is `gpt-6-luna`, the [recommended replacement](https://developers.openai.com/api/docs/deprecations) for `gpt-5-nano`, which shuts down on December 11, 2026. Update explicit model settings, environment variables, and saved playground configurations as well; configured model IDs are sent unchanged.
+
+For `gpt-6-luna` requests to the OpenAI Chat Completions API, non-empty `tools` automatically selects `reasoningEffort: 'none'` if no effort is configured. An explicit effort from a per-call option, constructor option, or `AI_REASONING_EFFORT` takes precedence. If it is not `'none'`, the library throws `ResilientLLMError` with code `INVALID_REQUEST` before sending the request. Set the per-call effort to `'none'` to override an inherited setting. Requests without tools keep the configured effort or the model's default. See the [model's endpoint and tool restrictions](https://developers.openai.com/api/docs/models/gpt-6-luna). Reasoning with tools on this model requires the Responses API, which this library does not implement.
+
+```javascript
+const llm = new ResilientLLM({ aiService: 'openai', model: 'gpt-6-luna' });
+const result = await llm.chat(messages, { tools, reasoningEffort: 'none' });
+```
 
 ---
 
@@ -1017,7 +1026,7 @@ See [Custom Provider Guide](./custom-providers.md) for details on configuring pr
 
 - Uses OpenAI-compatible endpoint `https://openrouter.ai/api/v1/chat/completions`
 - Uses `Authorization: Bearer <token>` header
-- Works with provider-prefixed model IDs (for example `openai/gpt-5-nano` or `openai/o1`)
+- Works with provider-prefixed model IDs (`provider/model`, as returned by OpenRouter's model list)
 - Choosing `openrouter/free` model will select a free model, but the quality might degrade severly
 - Optional attribution headers can be set via `OPENROUTER_HTTP_REFERER` and `OPENROUTER_APP_TITLE`
 

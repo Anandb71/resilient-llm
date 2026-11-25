@@ -518,7 +518,7 @@ class ResilientLLM {
         }
 
         const modelBase = model?.includes('/') ? model.split('/').pop() : model;
-        if (modelBase?.startsWith("o") || modelBase?.startsWith("gpt-5")) {
+        if (modelBase?.startsWith("o") || modelBase?.startsWith("gpt-5") || modelBase?.startsWith("gpt-6")) {
             // Reasoning model parameters
             const maxCompletionTokens = llmOptions?.maxCompletionTokens
                 ?? this.maxCompletionTokens
@@ -527,10 +527,19 @@ class ResilientLLM {
             if (maxCompletionTokens != null) {
                 requestBody.max_completion_tokens = Number(maxCompletionTokens);
             }
-            const reasoningEffort = llmOptions?.reasoningEffort ?? this.reasoningEffort
-                // GPT-5.6 Chat Completions tools require no reasoning.
-                ?? (providerConfig.name === 'openai' && modelBase === 'gpt-5.6-luna'
-                    && Array.isArray(requestBody.tools) && requestBody.tools.length ? 'none' : undefined);
+            let reasoningEffort = llmOptions?.reasoningEffort ?? this.reasoningEffort;
+            if (providerConfig.name === 'openai' && modelBase === 'gpt-6-luna'
+                && Array.isArray(requestBody.tools) && requestBody.tools.length > 0) {
+                // https://developers.openai.com/api/docs/models/gpt-6-luna
+                reasoningEffort ??= 'none';
+                if (reasoningEffort !== 'none') {
+                    throw new ResilientLLMError(
+                        'gpt-6-luna function calling in Chat Completions requires reasoningEffort: "none". '
+                        + 'Use reasoningEffort: "none" or a model that supports reasoning with tools on this endpoint.',
+                        'INVALID_REQUEST'
+                    );
+                }
+            }
             if (reasoningEffort != null) {
                 requestBody.reasoning_effort = reasoningEffort;
             }

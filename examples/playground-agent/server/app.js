@@ -83,7 +83,7 @@ app.use(express.static(join(__dirname, '../client')));
 // Initialize ResilientLLM
 const llm = new ResilientLLM({
     aiService: process.env.AI_SERVICE || 'openai',
-    model: process.env.AI_MODEL || 'gpt-5-nano',
+    model: process.env.AI_MODEL || 'gpt-6-luna',
     maxTokens: parseInt(process.env.MAX_TOKENS || '2048'),
     temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
     rateLimitConfig: {

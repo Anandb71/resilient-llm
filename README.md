@@ -34,7 +34,7 @@ import { ResilientLLM } from 'resilient-llm';
 
 const llm = new ResilientLLM({
   aiService: 'openai', // or 'anthropic', 'google', 'openrouter', 'ollama'
-  model: 'gpt-5-nano',
+  model: 'gpt-6-luna',
   maxTokens: 2048,
   temperature: 0.7,
   rateLimitConfig: {
@@ -62,6 +62,8 @@ const conversationHistory = [
 ```
 
 **Handling Error:** typescript users can import `ResilientLLMError` and use the `error.code` to deal with various errors. The canonical list is [`ResilientLLMErrorCode`](./lib/ResilientLLMError.ts) in the source. Javascript users can use the error object properties { name="ResilientLLMError", code, message, metadata, retryable }.
+
+OpenAI's `gpt-5-nano` shuts down on December 11, 2026. Its [recommended replacement](https://developers.openai.com/api/docs/deprecations), `gpt-6-luna`, is the OpenAI fallback default. Explicit model options, environment variables, and saved playground settings still take precedence and must be updated separately. For this model, `maxTokens` maps to `max_completion_tokens`; sampling options are omitted. Function tools use `reasoningEffort: 'none'` unless an effort is configured; any other effort with tools raises `INVALID_REQUEST`. See [reasoning model configuration](./docs/reference.md#reasoning-models).
 
 ## Key Methods
 

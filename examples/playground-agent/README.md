@@ -90,7 +90,7 @@ Set your API key and choose the default LLM service and model:
 # OpenAI
 export OPENAI_API_KEY=your_key_here
 export AI_SERVICE=openai
-export AI_MODEL=gpt-5-nano
+export AI_MODEL=gpt-6-luna
 
 # Or Anthropic
 export ANTHROPIC_API_KEY=your_key_here
